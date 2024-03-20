@@ -1,6 +1,6 @@
 package com.example.Springdatajdbc.service;
 
-import com.example.Springdatajdbc.exception.NotFoundException;
+import com.example.Springdatajdbc.exception.BasicException;
 import com.example.Springdatajdbc.model.Book;
 import com.example.Springdatajdbc.repository.BookRepository;
 import lombok.RequiredArgsConstructor;
@@ -15,26 +15,29 @@ public class BookServiceImpl implements BookService {
     private final BookRepository repository;
 
     public Book getById(Long id) {
-        return repository.findById(id).orElseThrow(() -> new NotFoundException("Book not found", HttpStatus.NOT_FOUND));
+        return repository.getById(id);
     }
 
-    public List<Book> getAll(){
-        return (List<Book>) repository.findAll();
+    public List<Book> getAll() {
+        return repository.getAll();
     }
 
-    public Book create(Book book){
-        return repository.save(book);
+    public Book create(Book book) {
+        Long id = repository.create(book);
+        book.setId(id);
+        return book;
     }
 
     public Book update(Book book, Long id) {
-        Book existingBook = repository.findById(id).orElseThrow(() -> new NotFoundException("Book not found", HttpStatus.NOT_FOUND));
-        existingBook.setAuthor(book.getAuthor());
-        existingBook.setTitle(existingBook.getTitle());
-        existingBook.setPublicationYear(book.getPublicationYear());
-        return repository.save(existingBook);
+        int result = repository.update(book, id);
+        if (result > 0) {
+            return book;
+        } else {
+            throw new BasicException("book hasn't been updated", HttpStatus.CONFLICT);
+        }
     }
 
-    public void deleteById(Long id){
+    public void deleteById(Long id) {
         repository.deleteById(id);
     }
 }
